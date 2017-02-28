@@ -1,6 +1,5 @@
 require_relative 'db_connection'
-require_relative '01_sql_object'
-require 'byebug'
+
 module Searchable
   def where(params)
     where_string = []
@@ -24,8 +23,4 @@ module Searchable
       self.new(found_row)
     end
   end
-end
-
-class SQLObject
-  extend Searchable
 end

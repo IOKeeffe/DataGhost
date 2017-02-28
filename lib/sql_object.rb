@@ -1,8 +1,12 @@
+require_relative 'associatable'
 require_relative 'db_connection'
+require_relative 'searchable'
 require 'active_support/inflector'
 require 'byebug'
 
 class SQLObject
+  extend Searchable
+  include Associatable
 
   def self.all
     objects ||= DBConnection.execute(<<-SQL)
@@ -50,23 +54,23 @@ class SQLObject
     WHERE
       id = #{id}
     SQL
+
     return nil if attributes.first.nil?
     self.new(attributes.first)
   end
 
   def self.find_by(search_hash)
     where_string = search_hash.keys.map do |key|
-      "#{key} = #{search_hash[key]}"
+      "#{key} = '#{search_hash[key]}'"
     end
     where_string = where_string.join(" AND ")
-
-    attributes = DBConnection.execute(<<-SQL, where_string)
+    attributes = DBConnection.execute(<<-SQL)
     SELECT
       *
     FROM
       #{table_name}
     WHERE
-      ?
+      #{where_string}
     SQL
   end
 
@@ -123,9 +127,9 @@ class SQLObject
     attributes[:id] = DBConnection.last_insert_row_id
   end
 
-  def method_missing(method_name, *args, &block)
-    if method_name.start_with?("find_by")
-      search_columns = method_name[("find_by".length)..-1].split("and")
+  def self.method_missing(method_name, *args, &block)
+    if method_name.to_s.start_with?("find_by")
+      search_columns = method_name[("find_by_".length)..-1].split("and")
 
       self.find_by(Hash[search_columns.zip(args)])
     end
@@ -157,5 +161,8 @@ class SQLObject
         SQL
     end
   end
+end
+
+class Cat < SQLObject
 
 end
