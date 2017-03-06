@@ -2,11 +2,10 @@ require_relative 'associatable'
 require_relative 'db_connection'
 require_relative 'searchable'
 require 'active_support/inflector'
-require 'byebug'
 
 class SQLObject
   extend Searchable
-  include Associatable
+  extend Associatable
 
   def self.all
     objects ||= DBConnection.execute(<<-SQL)
@@ -25,7 +24,7 @@ class SQLObject
       SELECT
         *
       FROM
-        #{table_name}
+        #{self.table_name}
     SQL
     @columns = @columns.first.map(&:to_sym)
   end
@@ -33,14 +32,13 @@ class SQLObject
   end
 
   def self.finalize!
-    this_table = self
-    columns.each do |column|
+    self.columns.each do |column|
       define_method(column) do
         return attributes[column]
       end
 
       define_method("#{column}=") do |input|
-        attributes[column]=input
+        self.attributes[column]=input
       end
     end
   end
@@ -74,6 +72,32 @@ class SQLObject
     SQL
   end
 
+  def self.first
+    result = DBConnection.execute(<<-SQL)
+    SELECT
+      *
+    FROM
+      #{table_name}
+    ORDER BY
+      id
+    ASC
+    LIMIT 1
+    SQL
+    self.new(result[0])
+  end
+  def self.last
+    result = DBConnection.execute(<<-SQL)
+    SELECT
+      *
+    FROM
+      #{table_name}
+    ORDER BY
+      id
+    DESC
+    LIMIT 1
+    SQL
+    self.new(result[0])
+  end
   def self.parse_all(results)
     results.map do |result|
       self.new(result)
@@ -98,7 +122,7 @@ class SQLObject
 
   def attribute_values
     this_class.columns.map do |column|
-      attributes[column]
+      self.send(column)
     end
   end
 
@@ -106,7 +130,7 @@ class SQLObject
     params.each do |attr_name, value|
       attr_name = attr_name.to_sym
       raise "unknown attribute '#{attr_name}'" unless this_class.columns.include?(attr_name)
-      send("#{attr_name}=", value)
+      self.send("#{attr_name}=", value)
     end
   end
 
@@ -161,8 +185,4 @@ class SQLObject
         SQL
     end
   end
-end
-
-class Cat < SQLObject
-
 end

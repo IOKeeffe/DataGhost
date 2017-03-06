@@ -9,10 +9,10 @@ module Associatable
   def belongs_to(name, options = {})
     options = BelongsToOptions.new(name, options)
     assoc_options[name] = options
+
     define_method(name) do
       foreign_key = self.send(options.foreign_key)
-      model = options.model_class
-      model.where(options.primary_key => foreign_key).first
+      options.model_class.where(options.primary_key => foreign_key).first
     end
   end
 
@@ -20,7 +20,7 @@ module Associatable
     options = HasManyOptions.new(name, self.name, options)
     define_method(name) do
       primary_key = self.send(options.primary_key)
-      model = options.model_class
+      model = options.class_name
       return_values = model.where(options.foreign_key => primary_key)
     end
   end
@@ -34,6 +34,13 @@ module Associatable
     define_method(name) do
       key_val = self.send(self.through_foreign_key)
       self.source_class.parse_all(join_db_tables(key_val)).first
+    end
+  end
+
+  def has_many_through(name, through_name, source_name)
+    define_method(name) do
+      key_val = self.send(self.through_foreign_key)
+      self.source_class.parse_all(join_db_tables(key_val))
     end
   end
 
@@ -52,6 +59,11 @@ module Associatable
   end
 
   def through_setup(through_name)
+
+    @class_name = options[:class_name] ? options[:class_name] : name.to_s.camelcase.singularize
+
+    @foreign_key = options[:foreign_key] ? options[:foreign_key] : "#{class_name.underscore}_id".to_sym
+    @primary_key = options[:primary_key] ? options[:primary_key] : :id
     self.through_options = self.class.assoc_options[through_name]
 
     self.through_table = self.through_options.table_name

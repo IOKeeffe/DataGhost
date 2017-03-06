@@ -2,8 +2,8 @@ require 'sqlite3'
 
 PRINT_QUERIES = ENV['PRINT_QUERIES'] == 'true'
 ROOT_FOLDER = File.join(File.dirname(__FILE__), '..')
-CATS_SQL_FILE = File.join(ROOT_FOLDER, 'cats.sql')
-CATS_DB_FILE = File.join(ROOT_FOLDER, 'cats.db')
+SAMPLE_SQL_FILE = File.join(ROOT_FOLDER, 'sample_db.sql')
+DB_FILE = File.join(ROOT_FOLDER, 'sample_db.db')
 
 class DBConnection
   def self.open(db_file_name)
@@ -14,18 +14,18 @@ class DBConnection
     @db
   end
 
-  def self.reset
+  def self.create_sample_db
     commands = [
-      "rm '#{CATS_DB_FILE}'",
-      "cat '#{CATS_SQL_FILE}' | sqlite3 '#{CATS_DB_FILE}'"
+      "rm '#{DB_FILE}'",
+      "cat '#{SAMPLE_SQL_FILE}' | sqlite3 '#{DB_FILE}'"
     ]
 
     commands.each { |command| `#{command}` }
-    DBConnection.open(CATS_DB_FILE)
+    DBConnection.open(DB_FILE)
   end
 
   def self.instance
-    reset if @db.nil?
+    create_sample_db if @db.nil?
 
     @db
   end

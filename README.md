@@ -1,6 +1,9 @@
 # DataGhost
 ## Introduction
-DataGhost is a Object Relational Mapping framework written in Ruby. It is designed to make it easier to retrieve and manipulate Database entries in Ruby. By converting Databases entries to Ruby objects and handling much of the functionality of primary and foreign key mapping, database processing is made aerodynamic and simple.
+DataGhost is a Object Relational Mapping framework written in Ruby. It is designed to make it easier to retrieve and manipulate Database entries in Ruby. By converting Databases entries to Ruby objects and handling much of the functionality of primary and foreign key mapping, database processing is made simple.
+
+##Setup
+To set up the instance of DataGhost, first open a SQLite3 database file by calling `DBConnection.open(FILE_NAME)`. To get acclimated, you can call `DBConnection.create_sample_db` to load a sample database of spaceships, aliens, and planets. You only need to load the database once, it will persist. You can then create ruby classes that inherit from SQLObject, and they will have methods available.
 
 ## SQL Object
 The `SQLObject` is the basic unit of DataGhost. It represents a row of sql data, with each column being a property of the `SQLObject`.
